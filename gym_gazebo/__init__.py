@@ -10,3 +10,8 @@ register(
     entry_point='gym_gazebo.envs.turtlebot:GazeboTurtlebotCameraEnv',
     # More arguments here
 )
+register(
+    id='GazeboTurtlebotKinect-v0',
+    entry_point='gym_gazebo.envs.turtlebot:GazeboTurtlebotKinectEnv',
+    # More arguments here
+)

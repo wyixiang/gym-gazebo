@@ -44,6 +44,7 @@ class DeepQ:
         self.discountFactor = discountFactor
         self.learnStart = learnStart
         self.learningRate = learningRate
+        #self.TAU = 0.001
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
         set_session(tf.Session(config=config))
@@ -53,7 +54,7 @@ class DeepQ:
         self.model = model
 
         #targetModel = self.createModel()
-        self.targetModel = None
+        #self.targetModel = targetModel
 
     def createModel(self):
         model = Sequential()
@@ -95,7 +96,12 @@ class DeepQ:
             i += 1
 
     def updateTargetNetwork(self):
-        self.backupNetwork(self.model, self.targetModel)
+        weights = self.model.get_weights()
+        target_weights = self.targetModel.get_weights()
+        for i in xrange(len(weights)):
+            target_weights[i] = self.TAU * weights[i] + (1 - self.TAU) * target_weights[i]
+        self.targetModel.set_weights(target_weights)
+        #self.backupNetwork(self.model, self.targetModel)
 
     # predict Q values for all the actions
     def getQValues(self, state):
@@ -181,6 +187,7 @@ class DeepQ:
                 qValues = self.getQValues(state)
                 if useTargetNetwork:
                     qValuesNewState = self.getTargetQValues(newState)
+                    #self.updateTargetNetwork()
                 else :
                     qValuesNewState = self.getQValues(newState)
                 targetValue = self.calculateTarget(qValuesNewState, reward, isFinal)
@@ -192,13 +199,14 @@ class DeepQ:
                 if isFinal:
                     X_batch = np.append(X_batch, newState.copy(), axis=0)
                     Y_batch = np.append(Y_batch, np.array([[reward]*self.output_size]), axis=0)
-            self.model.fit(X_batch, Y_batch, validation_split=0.2, batch_size = len(miniBatch), epochs=1, verbose = 0, callbacks=[TensorBoard(log_dir='./tmp/log')])
+            self.model.fit(X_batch, Y_batch, validation_split=0.2, batch_size = len(miniBatch), epochs=1, verbose = 0, callbacks=[TensorBoard(log_dir='./tmp/log-cnn')])
 
     def saveModel(self, path):
         self.model.save(path+'.h5')
 
     def loadWeights(self, path):
         self.model.set_weights(load_model(path+'.h5').get_weights())
+        print("success load")
 
 def detect_monitor_files(training_dir):
     return [os.path.join(training_dir, f) for f in os.listdir(training_dir) if f.startswith('openaigym')]
@@ -249,6 +257,7 @@ if __name__ == '__main__':
 
         agent = DeepQ(network_outputs, memorySize, discountFactor, learningRate, learnStart)
         agent.initNetworks()
+        agent.loadWeights(weights_path)
 
     else:
         #Load weights, monitor info and parameter info.
@@ -287,6 +296,8 @@ if __name__ == '__main__':
     highest_reward = 0
     start_time = time.time()
 
+    step_average=0
+
     #start iterating from 'current epoch'.
     for epoch in range(current_epoch+1, episode_count + 1, 1):
         observation = env.reset()
@@ -298,6 +309,7 @@ if __name__ == '__main__':
             qValues = agent.getQValues(observation)
 
             action = agent.selectAction(qValues, explorationRate)
+            #action = agent.selectAction(qValues, explorationRate * (t + 10) / (10 + step_average))
 
             newObservation, reward, done, info = env.step(action)
 
@@ -328,6 +340,7 @@ if __name__ == '__main__':
 
             env._flush(force=True)
             if done:
+                step_average=0.9*step_average+0.1*t
                 last100Scores[last100ScoresIndex] = cumulated_reward
                 last100ScoresIndex += 1
                 total_seconds = int(time.time() - start_time + loadsim_seconds)
@@ -358,11 +371,11 @@ if __name__ == '__main__':
                 print ("updating target network")
             '''
         if epoch%10==0:
-            plotter.plot(env,average=5)
+            plotter.plot(env,average=10)
 
         if explorationRate > FINAL_EPSILON and stepCounter > learnStart:
-            explorationRate -= (INITIAL_EPSILON - FINAL_EPSILON) / EXPLORE
-            #explorationRate *= epsilon_discount
+            #explorationRate -= (INITIAL_EPSILON - FINAL_EPSILON) / EXPLORE
+            explorationRate *= epsilon_discount
 
     env.close()
 

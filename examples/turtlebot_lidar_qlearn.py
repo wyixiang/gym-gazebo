@@ -72,7 +72,7 @@ def render():
 
 if __name__ == '__main__':
 
-    env_o = gym.make('GazeboCircuit2TurtlebotLidar-v0')
+    env_o = gym.make('GazeboTurtlebotLidar-v0')
 
     outdir = '/tmp/gazebo_gym_experiments'
     epsilon_discount = 0.9986

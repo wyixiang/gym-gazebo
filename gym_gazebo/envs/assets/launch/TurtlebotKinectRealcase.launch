@@ -3,10 +3,6 @@
   <include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
   
   <include file="$(find freenect_launch)/launch/freenect.launch"/>
-  
-  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
-    <param name="publish_frequency" type="double" value="30.0" />
-  </node>
 
   <node pkg="depthimage_to_laserscan"  type="depthimage_to_laserscan" name="depthimage_to_laserscan" args="standalone depthimage_to_lasersacn/DepthImageToLaserScanNodelet">
      <remap from="image"    to="/camera/depth/image_raw"/>

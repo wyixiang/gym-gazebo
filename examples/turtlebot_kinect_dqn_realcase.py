@@ -117,17 +117,8 @@ def discretize_observation(data,new_ranges):
 
 class GoForward():
     def __init__(self):
-        # initiliaze
-        port = os.environ["ROS_PORT_SIM"]
-        # start roscore
-        subprocess.Popen(["roscore", "-p", port])
-        time.sleep(1)
+
         rospy.init_node('GoForward', anonymous=False)
-
-        fullpath = "/home/yixiangw/gym-gazebo/gym_gazebo/envs/assets/launch/TurtlebotKinectRealcase.launch"
-
-        subprocess.Popen(["roslaunch", "-p", port, fullpath])
-        print ("realcase launched!")
 
         # tell user how to stop TurtleBot
         rospy.loginfo("To stop TurtleBot CTRL + C")
@@ -137,7 +128,7 @@ class GoForward():
 
         self.vel_pub = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=5)
 
-        weights_path = './tmp/turtle_kinect_dqn1001700'
+        weights_path = './tmp/turtle_kinect_dqn1001400'
 
         updateTargetNetwork = 10000
         learningRate = 0.00025
@@ -174,7 +165,7 @@ class GoForward():
             vel_cmd.angular.z = ang_vel
             self.vel_pub.publish(vel_cmd)
 
-            time.sleep(2)
+            time.sleep(1)
 
     def shutdown(self):
         # stop turtlebot

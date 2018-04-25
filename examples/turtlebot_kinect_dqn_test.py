@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
     continue_execution = False
 
-    weights_path = './tmp/turtle_kinect_dqn1001700'
+    weights_path = './tmp/turtle_kinect_dqn1001400'
     plotter = liveplot.LivePlot(outdir)
 
     episode_count = 10000

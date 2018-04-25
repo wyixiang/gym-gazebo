@@ -10,6 +10,7 @@ import subprocess
 
 import rospy
 import roslaunch
+import os
 from geometry_msgs.msg import Twist
 from std_srvs.srv import Empty
 
@@ -117,7 +118,16 @@ def discretize_observation(data,new_ranges):
 class GoForward():
     def __init__(self):
         # initiliaze
+        port = os.environ["ROS_PORT_SIM"]
+        # start roscore
+        subprocess.Popen(["roscore", "-p", port])
+        time.sleep(1)
         rospy.init_node('GoForward', anonymous=False)
+
+        fullpath = "/home/yixiangw/gym-gazebo/gym_gazebo/envs/assets/launch/TurtlebotKinectRealcase.launch"
+
+        subprocess.Popen(["roslaunch", "-p", port, fullpath])
+        print ("realcase launched!")
 
         # tell user how to stop TurtleBot
         rospy.loginfo("To stop TurtleBot CTRL + C")

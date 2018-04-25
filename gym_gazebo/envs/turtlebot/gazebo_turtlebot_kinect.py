@@ -14,9 +14,9 @@ class GazeboTurtlebotKinectEnv(gazebo_env.GazeboEnv):
 
     def __init__(self):
         # Launch the simulation with the given launchfile name
-        #gazebo_env.GazeboEnv.__init__(self, "GazeboCircuit2TurtlebotLidar_v0.launch")
+        gazebo_env.GazeboEnv.__init__(self, "GazeboCircuit2TurtlebotKinect_v0.launch")
         #gazebo_env.GazeboEnv.__init__(self, "GazeboRoundTurtlebotLidar_v0.launch")
-        gazebo_env.GazeboEnv.__init__(self, "GazeboMazeTurtlebotLidar_v1.launch")
+        #gazebo_env.GazeboEnv.__init__(self, "GazeboMazeTurtlebotLidar_v1.launch")
         self.vel_pub = rospy.Publisher('/mobile_base/commands/velocity', Twist, queue_size=5)
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
@@ -58,7 +58,8 @@ class GazeboTurtlebotKinectEnv(gazebo_env.GazeboEnv):
     def discretize_observation(self,data,new_ranges):
         discretized_ranges = []
         mod = len(data.ranges)/new_ranges
-        for i, item in enumerate(data.ranges):
+        for i in range(0, len(data.ranges), mod):
+        #for i, item in enumerate(data.ranges):
             if (i%mod==0):
                 if data.ranges[i] == float ('Inf') or np.isinf(data.ranges[i]):
                     discretized_ranges.append(10)
@@ -115,9 +116,15 @@ class GazeboTurtlebotKinectEnv(gazebo_env.GazeboEnv):
         state = self.discretize_observation(kinect_data,self.state_dim)
         done = self.ifdone(data)
 
+        laser_len = len(data.ranges)
+        left_sum = sum(data.ranges[laser_len - (laser_len / 5):laser_len - (laser_len / 10)])  # 80-90
+        right_sum = sum(data.ranges[(laser_len / 10):(laser_len / 5)])  # 10-20
+
+        center_detour = abs(right_sum - left_sum) / 5
+
         if not done:
             # Straight reward = 5, Max angle reward = 0.5
-            reward = round(15 * (max_ang_speed - abs(ang_vel) + 0.0335), 2)
+            reward = round(15 * (max_ang_speed - abs(ang_vel) + 0.0335), 2)/(center_detour+1)
         else:
             reward = -200
 

@@ -3,10 +3,10 @@
 
 ### Ubuntu 16.04
 Basic requirements:
-- ROS Kinetic (`/rosversion: 1.12.7`)
+- ROS Kinetic
 - Gazebo 8.1.1
-- Python 3.5.2
-- OpenCV3, installed from sources for Python 3 (`git clone https://github.com/Itseez/opencv.git`)
+- Python 2.7
+- OpenCV
 - OpenAI gym
 
 
@@ -21,7 +21,7 @@ sudo apt-get install ros-kinetic-gazebo8-ros-pkgs ros-kinetic-gazebo8-ros-contro
 
 #### ROS Kinetic dependencies
 ```bash
-sudo pip3 install rospkg catkin_pkg
+sudo pip install rospkg catkin_pkg
 
 sudo apt-get install python3-pyqt4
 
@@ -58,7 +58,6 @@ cd build
 cmake ..
 make
 sudo make install
-echo "## Sophus installed ##\n"
 ```
 
 #### Gazebo gym
@@ -66,24 +65,21 @@ echo "## Sophus installed ##\n"
 ```bash
 git clone https://github.com/wyixiang/gym-gazebo
 cd gym-gazebo
-sudo pip3 install -e .
+sudo pip install -e .
 ```
-
-If successful, expect something like [this](https://gist.github.com/vmayoral/4a1e5999811ac8bfbf7875670c430d27).
 
 #### Dependencies and libraries
 ```bash
-sudo pip3 install h5py
-sudo apt-get install python3-skimage
+sudo pip install h5py
+sudo apt-get install python-skimage
 
-# install Theano
-cd ~/
-git clone git://github.com/Theano/Theano.git
-cd Theano/
-sudo python3 setup.py develop
+# install Tensorflow
+sudo pip install tensorflow
+or
+sudo pip install tensorflow-gpu
 
 #install Keras
-sudo pip3 install keras
+sudo pip install keras
 ```
 
 
@@ -94,7 +90,7 @@ sudo apt-get install ros-kinetic-ar-track-alvar-msgs libspnav-dev libbluetooth-d
 
 Agent dependencies:
 ```bash
-cd gym_gazebo/envs/installation
+cd ~/gym-gazebo/gym_gazebo/envs/installation
 bash setup_kinetic.bash	
 ```
 
@@ -104,7 +100,7 @@ cd /opt/ros/kinetic/lib/python2.7/dist-packages/
 sudo nautilus .
 #do it using GUI
 #remove or rename and check
-pip3 install opencv-python
+pip install opencv-python
 ```
 
 then:
@@ -118,17 +114,19 @@ Run the environment with a sample agent:
 ```bash
 cd ~/gym-gazebo/gym_gazebo/envs/installation
 bash turtlebot_setup.bash
-cd ~/gym-gazebo/examples/turtlebot
+cd ~/gym-gazebo/examples
 export ROS_PORT_SIM=11311
-python circuit2_turtlebot_lidar_qlearn.py
+python turtlebot_lidar_qlearn.py
 ```
 
 to see the simulation:
 ```bash
 gzclient
 ```
-
-
+If you don't want to export everytime
+```bash
+echo "export ROS_PORT_SIM=11311" >> .bashrc
+```
 
 ## Usage
 
@@ -145,7 +143,7 @@ sudo pip install -e .
 - Load the environment variables corresponding to the robot you want to launch. E.g. to load the Turtlebot:
 
 ```bash
-cd gym_gazebo/envs/installation
+cd ~/gym-gazebo/gym_gazebo/envs/installation
 bash turtlebot_setup.bash
 ```
 
@@ -154,9 +152,8 @@ Note: all the setup scripts are available in `gym_gazebo/envs/installation`
 - Run any of the examples available in `examples/`. E.g.:
 
 ```bash
-cd examples/scripts_turtlebot
-python circuit2_turtlebot_lidar_qlearn.py
-```
+cd examples
+python circuit2_
 
 ### Display the simulation
 
@@ -166,17 +163,6 @@ To see what's going on in Gazebo during a simulation, simply run gazebo client:
 gzclient
 ```
 
-### Display reward plot
-
-Display a graph showing the current reward history by running the following script:
-
-```bash
-cd examples/utilities
-python display_plot.py
-```
-
-HINT: use `--help` flag for more options.
-
 ### Killing background processes
 
 Sometimes, after ending or killing the simulation `gzserver` and `rosmaster` stay on the background, make sure you end them before starting new tests.
@@ -184,5 +170,5 @@ Sometimes, after ending or killing the simulation `gzserver` and `rosmaster` sta
 We recommend creating an alias to kill those processes.
 
 ```bash
-echo "alias killgazebogym='killall -9 rosout roslaunch rosmaster gzserver nodelet robot_state_publisher gzclient'" >> ~/.bashrc
+killall -9 rosout roslaunch rosmaster gzserver nodelet robot_state_publisher gzclient
 ```

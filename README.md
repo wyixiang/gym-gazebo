@@ -9,10 +9,16 @@ Basic requirements:
 - OpenCV
 - OpenAI gym
 
-
-install gazebo8:
+#### install gym:
 ```bash
-sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable lsb_release -cs main" > /etc/apt/sources.list.d/gazebo-stable.list'
+git clone https://github.com/openai/gym.git
+cd gym
+pip install -e .
+```
+
+#### install gazebo8:
+```bash
+sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
 wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
 sudo apt-get update
 sudo apt-get install gazebo8
@@ -21,14 +27,13 @@ sudo apt-get install ros-kinetic-gazebo8-ros-pkgs ros-kinetic-gazebo8-ros-contro
 
 #### ROS Kinetic dependencies
 ```bash
-sudo pip install rospkg catkin_pkg
-
-sudo apt-get install python3-pyqt4
+pip install rospkg catkin_pkg
 
 sudo apt-get install \
 cmake gcc g++ qt4-qmake libqt4-dev \
 libusb-dev libftdi-dev \
-python3-defusedxml python3-vcstool \
+python3-defusedxml python3-vcstool python3-pyqt4 \
+python-skimage \
 ros-kinetic-octomap-msgs        \
 ros-kinetic-joy                 \
 ros-kinetic-geodesy             \
@@ -45,11 +50,16 @@ ros-kinetic-kdl-conversions     \
 ros-kinetic-eigen-conversions   \
 ros-kinetic-tf2-sensor-msgs     \
 ros-kinetic-pcl-ros \
-ros-kinetic-navigation
+ros-kinetic-navigation \
+ros-kinetic-ar-track-alvar-msgs \
+libspnav-dev libbluetooth-dev \
+libcwiid-dev pyqt4-dev-tools libffi-dev \
+ros-kinetic-depthimage-to-laserscan \
+ros-kinetic-image-view 
 ```
 
+#### Install Sophus
 ```bash
-#Install Sophus
 cd
 git clone https://github.com/stonier/sophus -b release/0.9.1-kinetic
 cd sophus
@@ -70,9 +80,6 @@ sudo pip install -e .
 
 #### Dependencies and libraries
 ```bash
-sudo pip install h5py
-sudo apt-get install python-skimage
-
 # install Tensorflow
 sudo pip install tensorflow
 or
@@ -80,12 +87,6 @@ sudo pip install tensorflow-gpu
 
 #install Keras
 sudo pip install keras
-```
-
-
-before:
-```bash
-sudo apt-get install ros-kinetic-ar-track-alvar-msgs libspnav-dev libbluetooth-dev libcwiid-dev pyqt4-dev-tools libffi-dev
 ```
 
 Agent dependencies:
@@ -123,6 +124,7 @@ to see the simulation:
 ```bash
 gzclient
 ```
+
 If you don't want to export everytime
 ```bash
 echo "export ROS_PORT_SIM=11311" >> .bashrc
@@ -153,7 +155,7 @@ Note: all the setup scripts are available in `gym_gazebo/envs/installation`
 
 ```bash
 cd examples
-python circuit2_
+python turtlrbot_
 
 ### Display the simulation
 
@@ -166,8 +168,6 @@ gzclient
 ### Killing background processes
 
 Sometimes, after ending or killing the simulation `gzserver` and `rosmaster` stay on the background, make sure you end them before starting new tests.
-
-We recommend creating an alias to kill those processes.
 
 ```bash
 killall -9 rosout roslaunch rosmaster gzserver nodelet robot_state_publisher gzclient

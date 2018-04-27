@@ -129,11 +129,12 @@ class DeepQ:
             return reward + self.discountFactor * self.getMaxQ(qValuesNewState)
 
     # select the action with the highest Q value
-    def selectAction(self, qValues, explorationRate):
+    def selectAction(self, observation, explorationRate):
         rand = random.random()
         if rand < explorationRate :
             action = np.random.randint(0, self.output_size)
         else :
+            qValues = agent.getQValues(observation)
             action = self.getMaxIndex(qValues)
         return action
 
@@ -228,7 +229,7 @@ if __name__ == '__main__':
 
     continue_execution = False
 
-    weights_path = './tmp/turtle_camera'
+    weights_path = './tmp/cnn-w/turtle_camera'
     monitor_path = './tmp/turtle_camera'
     params_json = './tmp/turtle_camera.json'
     plotter = liveplot.LivePlot(outdir)
@@ -248,8 +249,8 @@ if __name__ == '__main__':
         learnStart = 500
         network_outputs = 21
         EXPLORE = 1500
-        INITIAL_EPSILON = 1  # starting value of epsilon
-        FINAL_EPSILON = 0.05  # final value of epsilon
+        INITIAL_EPSILON = 0.4  # starting value of epsilon
+        FINAL_EPSILON = 0.1  # final value of epsilon
         explorationRate = INITIAL_EPSILON
         current_epoch = 0
         stepCounter = 0
@@ -257,7 +258,7 @@ if __name__ == '__main__':
 
         agent = DeepQ(network_outputs, memorySize, discountFactor, learningRate, learnStart)
         agent.initNetworks()
-        agent.loadWeights(weights_path)
+        agent.loadWeights('./tmp/cbak/turtle_camera')
 
     else:
         #Load weights, monitor info and parameter info.
@@ -301,24 +302,24 @@ if __name__ == '__main__':
     #start iterating from 'current epoch'.
     for epoch in range(current_epoch+1, episode_count + 1, 1):
         observation = env.reset()
+        state = observation
         cumulated_reward = 0
 
         for t in range(max_steps):
             env_o.get_step(t)
 
-            qValues = agent.getQValues(observation)
-
-            action = agent.selectAction(qValues, explorationRate)
+            action = agent.selectAction(state, explorationRate)
             #action = agent.selectAction(qValues, explorationRate * (t + 10) / (10 + step_average))
 
             newObservation, reward, done, info = env.step(action)
+            newstate = newObservation
 
             cumulated_reward += reward
             if highest_reward < cumulated_reward:
                 highest_reward = cumulated_reward
 
-            agent.addMemory(observation, action, reward, newObservation, done)
-            observation = newObservation
+            agent.addMemory(state, action, reward, newstate, done)
+            state = newstate
 
             stepCounter += 1
 
@@ -338,7 +339,6 @@ if __name__ == '__main__':
                 print ("reached the end")
                 done = True
 
-            env._flush(force=True)
             if done:
                 step_average=0.9*step_average+0.1*t
                 last100Scores[last100ScoresIndex] = cumulated_reward
@@ -354,7 +354,7 @@ if __name__ == '__main__':
                 else:
                     print ("EP " + str(epoch) +" -{:>4} steps".format(t+1) +" - last100 C_Rewards : " + str(int((sum(last100Scores) / len(last100Scores)))) + " - CReward: " + "%5d" % cumulated_reward + "  Eps=" + "%3.2f" % explorationRate + "  Time: %d:%02d:%02d" % (h, m, s))
                     if (epoch)%100==0:
-                        agent.saveModel(weights_path)
+                        agent.saveModel(weights_path+str(epoch))
                         env._flush()
                         copy_tree(outdir,monitor_path)
                         #save simulation parameters.

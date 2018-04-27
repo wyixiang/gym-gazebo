@@ -221,6 +221,7 @@ def clear_monitor_files(training_dir):
         print(file)
         os.unlink(file)
 
+
 if __name__ == '__main__':
 
     env_o = gym.make('GazeboTurtlebotKinect-v0')
@@ -228,12 +229,12 @@ if __name__ == '__main__':
 
     continue_execution = False
 
-    weights_path = './tmp/turtle_kinect_dqn'
+    weights_path = './tmp/turtle_kinect_dqn100'
     monitor_path ='./tmp/turtle_kinect_dqn'
     params_json  = './tmp/turtle_kinect_dqn.json'
     plotter = liveplot.LivePlot(outdir)
 
-    epsilon_discount = 0.995
+    epsilon_discount = 0.998
 
     if not continue_execution:
         episode_count = 10000
@@ -246,8 +247,8 @@ if __name__ == '__main__':
         learnStart = 64 # timesteps to observe before training
         network_inputs = 20
         network_outputs = 21
-        network_structure = [300,300]
-        INITIAL_EPSILON = 1  # starting value of epsilon
+        network_layers = [300, 300]
+        INITIAL_EPSILON = 0.6  # starting value of epsilon
         FINAL_EPSILON = 0.05  # final value of epsilon
         explorationRate = INITIAL_EPSILON
         current_epoch = 0
@@ -255,7 +256,8 @@ if __name__ == '__main__':
         loadsim_seconds = 0
 
         agent = DeepQ(network_inputs, network_outputs, memorySize, discountFactor, learningRate, learnStart)
-        agent.initNetworks(network_structure)
+        agent.initNetworks(network_layers)
+        agent.loadWeights(weights_path)
     else:
         #Load weights, monitor info and parameter info.
         with open(params_json) as outfile:
@@ -350,12 +352,12 @@ if __name__ == '__main__':
                 else:
                     print ("EP " + str(epoch) +" -{:>4} steps".format(t+1) +" - last100 C_Rewards : " + str(int((sum(last100Scores) / len(last100Scores)))) + " - CReward: " + "%5d" % cumulated_reward + "  Eps=" + "%3.2f" % explorationRate + "  Time: %d:%02d:%02d" % (h, m, s))
                     if (epoch)%100==0:
-                        agent.saveModel(weights_path)
+                        agent.saveModel(weights_path+str(epoch))
                         env._flush()
                         copy_tree(outdir,monitor_path)
                         #save simulation parameters.
                         parameter_keys = ['epochs','steps','updateTargetNetwork','explorationRate','minibatch_size','learnStart','learningRate','discountFactor','memorySize','network_inputs','network_outputs','network_structure','current_epoch','stepCounter','INITIAL_EPSILON','FINAL_EPSILON','loadsim_seconds']
-                        parameter_values = [episode_count, max_steps, updateTargetNetwork, explorationRate, minibatch_size, learnStart, learningRate, discountFactor, memorySize, network_inputs, network_outputs, network_structure, epoch, stepCounter, INITIAL_EPSILON, FINAL_EPSILON, total_seconds]
+                        parameter_values = [episode_count, max_steps, updateTargetNetwork, explorationRate, minibatch_size, learnStart, learningRate, discountFactor, memorySize, network_inputs, network_outputs, network_layers, epoch, stepCounter, INITIAL_EPSILON, FINAL_EPSILON, total_seconds]
                         parameter_dictionary = dict(zip(parameter_keys, parameter_values))
                         with open(params_json, 'w') as outfile:
                             json.dump(parameter_dictionary, outfile)

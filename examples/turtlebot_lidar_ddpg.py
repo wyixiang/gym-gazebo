@@ -129,6 +129,15 @@ class DDPG:
 
         self.writer = tf.summary.FileWriter('./tmp/log-ddpg', sess.graph)
 
+    def selectAction(self, state, explorationRate):
+        if np.random.random() > explorationRate:
+            a_type = "Exploit"
+            action = self.actor.model.predict(state.reshape(1, len(state)))
+        else:
+            a_type = "Explore"
+            action = np.random.uniform(-1, 1)
+        return action
+
     def addMemory(self, state, action, reward, newState, isFinal):
         self.memory.addMemory(state, action, reward, newState, isFinal)
 
@@ -271,13 +280,8 @@ if __name__ == '__main__':
 
         for t in range(max_steps):
             env_o.get_step(t)
-            
-            if np.random.random() > explorationRate:
-                a_type = "Exploit"
-                action = agent.actor.model.predict(state.reshape(1, len(state)))
-            else:
-                a_type = "Explore"
-                action = np.random.uniform(-1, 1)
+
+            action = agent.selectAction(state,explorationRate)
 
             newObservation, reward, done, info = env.step(action)
             newstate = np.array(newObservation)
@@ -287,7 +291,6 @@ if __name__ == '__main__':
                 highest_reward = cumulated_reward
 
             agent.addMemory(state, action, reward, newstate, done)
-
             state = newstate
 
             stepCounter += 1
@@ -302,7 +305,6 @@ if __name__ == '__main__':
                 print ("reached the end")
                 done = True
 
-            env._flush(force=True)
             if done:
                 last100Scores[last100ScoresIndex] = cumulated_reward
                 last100ScoresIndex += 1

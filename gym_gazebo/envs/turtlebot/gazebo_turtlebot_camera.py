@@ -16,8 +16,8 @@ class GazeboTurtlebotCameraEnv(gazebo_env.GazeboEnv):
 
     def __init__(self):
         # Launch the simulation with the given launchfile name
-        #gazebo_env.GazeboEnv.__init__(self, "GazeboCircuit2cTurtlebotLidar_v0.launch")
-        gazebo_env.GazeboEnv.__init__(self, "GazeboMazeTurtlebotLidar_v0.launch")
+        gazebo_env.GazeboEnv.__init__(self, "GazeboCircuit2cTurtlebotLidar_v0.launch")
+        #gazebo_env.GazeboEnv.__init__(self, "GazeboMazeTurtlebotLidar_v0.launch")
         self.vel_pub = rospy.Publisher('/mobile_base/commands/velocity', Twist, queue_size=5)
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
@@ -112,22 +112,10 @@ class GazeboTurtlebotCameraEnv(gazebo_env.GazeboEnv):
             print ("/gazebo/pause_physics service call failed")
 
         done = self.ifdone(data)
-        '''
-        self.last50actions.pop(0) #remove oldest
-        if action == 0:
-            self.last50actions.append(0)
-        else:
-            self.last50actions.append(1)
 
-        action_sum = sum(self.last50actions)
-        '''
         if not done:
             # Straight reward = 5, Max angle reward = 0.5
             reward = round(15 * (max_ang_speed - abs(ang_vel) + 0.0335), 2)
-            '''
-            if action_sum > 45: #L or R looping
-                reward = -5
-            '''
         else:
             reward = -200
 

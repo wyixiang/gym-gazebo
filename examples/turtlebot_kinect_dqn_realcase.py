@@ -120,17 +120,15 @@ class GoForward():
 
         rospy.init_node('GoForward', anonymous=False)
 
-        # tell user how to stop TurtleBot
         rospy.loginfo("To stop TurtleBot CTRL + C")
 
-        # What function to call when you ctrl + c
+        #  when ctrl + c
         rospy.on_shutdown(self.shutdown)
 
         self.vel_pub = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=5)
 
         weights_path = './tmp/turtle_kinect_dqn1001400'
 
-        updateTargetNetwork = 10000
         learningRate = 0.00025
         network_inputs = 20
         network_outputs = 21
@@ -142,8 +140,10 @@ class GoForward():
 
         action_dim = network_outputs
         state_dim = network_inputs
+        num=0
 
         while not rospy.is_shutdown():
+            num+=1
             kinect_data = None
             while kinect_data is None:
                 try:
@@ -163,6 +163,8 @@ class GoForward():
             vel_cmd = Twist()
             vel_cmd.linear.x = 0.2
             vel_cmd.angular.z = ang_vel
+            print ("NUM" + "%3d" % num +"Action " + "%2d" % action + " linear " + "%.1f" % vel_cmd.linear.x + " angular " + "%2.1f" % vel_cmd.angular.z )
+
             self.vel_pub.publish(vel_cmd)
 
             time.sleep(1)
@@ -170,9 +172,7 @@ class GoForward():
     def shutdown(self):
         # stop turtlebot
         rospy.loginfo("Stop TurtleBot")
-        # a default Twist has linear.x of 0 and angular.z of 0.  So it'll stop TurtleBot
         self.vel_pub.publish(Twist())
-        # sleep just makes sure TurtleBot receives the stop command prior to shutting down the script
         rospy.sleep(1)
 
 

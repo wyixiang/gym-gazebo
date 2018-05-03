@@ -130,6 +130,66 @@ If you don't want to export everytime
 echo "export ROS_PORT_SIM=11311" >> .bashrc
 ```
 
+#### Real Turtlebot and Kinect
+install turtlebot need 3 parts: rocon, kobuki, and turtlebot.
+rocon don't have its apt package, so we install from source.
+```bash
+mkdir ~/rocon
+cd ~/rocon
+wstool init -j5 src https://raw.github.com/robotics-in-concert/rocon/release/indigo/rocon.rosinstall
+source /opt/ros/indigo/setup.bash
+rosdep install --from-paths src -i -y
+catkin_make
+```
+```bash
+sudo apt-get install ros-kinetic-turtlebot ros-kinetic-turtlebot-apps ros-kinetic-turtlebot-interactions ros-kinetic-kobuki-ftdi ros-kinetic-ar-track-alvar-msgs
+```
+build connect to turtlebot
+```bash
+roslaunch turtlebot_bringup minimal.launch
+```
+control from your keyboard
+```bash
+roslaunch turtlebot_teleop keyboard_teleop.launch
+```
+install kinectdriver
+```bash
+mkdir ~/kinectdriver 
+cd ~/kinectdriver 
+git clone https://github.com/avin2/SensorKinect 
+cd SensorKinect/Bin/
+tar xvjf SensorKinect093-Bin-Linux-x64-v5.1.2.1.tar.bz2
+cd Sensor-Bin-Linux-x64-v5.1.2.1/
+sudo ./install.sh
+```
+```bash
+roslaunch openni_launch openni.launch
+```
+the driver above might not work, so we install another
+```bash
+sudo apt-get install libfreenect-dev ros-kinetic-freenect-launch
+```
+```bash
+roslaunch freenect_launch freenect.launch
+```
+view image
+```bash
+rosrun image_view image_view image:=/camera/rgb/image_color
+rosrun image_view image_view image:=/camera/depth/image
+```
+Kinect isn’t compatible with USB 3.0. Plug it into a USB 2.0 port. (Problems can also occur with USB 2.0 ports that are 3.0 compatible.).
+Troubleshooting: I don’t have a USB 2.0 port or it’s still giving the above errors
+
+We’re going to disable USB 3.0 in the BIOS.
+```
+Boot into BIOS by rebooting your computer and holding down the F2 key (it could be a different key on your computer).
+Go to the advanced tab.
+This part varies depending on your computer. If you have a USB option go there first.
+If your BIOS lists xHCI, disable it.
+If your BIOS lists USB Debugging, enable it.
+Save and exit BIOS.
+```
+
 ## Usage
 
 ### Build and install gym-gazebo

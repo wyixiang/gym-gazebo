@@ -129,13 +129,9 @@ class DDPG:
 
         self.writer = tf.summary.FileWriter('./tmp/log-ddpg', sess.graph)
 
-    def selectAction(self, state, explorationRate):
-        if np.random.random() > explorationRate:
-            a_type = "Exploit"
-            action = self.actor.model.predict(state.reshape(1, len(state)))
-        else:
-            a_type = "Explore"
-            action = np.random.uniform(-1, 1)
+    def selectAction(self, state):
+        action = self.actor.model.predict(state.reshape(1, len(state)))
+
         return action
 
     def addMemory(self, state, action, reward, newState, isFinal):
@@ -172,12 +168,6 @@ class DDPG:
             summary = tf.Summary(value=[tf.Summary.Value(tag="loss", simple_value=loss), ])
             self.writer.add_summary(summary)
 
-    def saveModel(self, path):
-        self.actor.model.save(path+'_actor.h5')
-        self.actor.target_model.save(path + '_actor_target.h5')
-        self.critic.model.save(path+'_critic.h5')
-        self.critic.target_model.save(path + '_critic_target.h5')
-
     def loadWeights(self, path):
         self.actor.model.set_weights(load_model(path+'_actor.h5').get_weights())
         self.actor.target_model.set_weights(load_model(path + '_actor_target.h5').get_weights())
@@ -185,86 +175,34 @@ class DDPG:
         self.critic.target_model.set_weights(load_model(path + '_critic_target.h5').get_weights())
 
 
-def detect_monitor_files(training_dir):
-    return [os.path.join(training_dir, f) for f in os.listdir(training_dir) if f.startswith('openaigym')]
-
-
-def clear_monitor_files(training_dir):
-    files = detect_monitor_files(training_dir)
-    if len(files) == 0:
-        return
-    for file in files:
-        print(file)
-        os.unlink(file)
-
-
 if __name__ == '__main__':
 
-    env_o = gym.make('GazeboTurtlebotLidar-v0')
-    outdir = '/tmp/gazebo_gym_experiments/'
+    env = gym.make('GazeboTurtlebotLidar-v0')
 
-    continue_execution = False
+    weights_path = './tmp/ddpg/turtle_lidar_ddpg700'
+    #700,1000,600
 
-    weights_path = './tmp/test/turtle_lidar_ddpg'
-    monitor_path = './tmp/test/turtle_lidar_ddpg'
-    params_json = './tmp/test/turtle_lidar_ddpg.json'
-    plotter = liveplot.LivePlot(outdir)
+    episode_count = 10000
+    max_steps = 1000
+    minibatch_size = 64
+    discountFactor = 0.99
+    memorySize = 10000
+    learnStart = 64 # timesteps to observe before training
+    action_dim = 1
+    state_dim = 20
+    explorationRate = 0
+    current_epoch = 0
+    stepCounter = 0
+    loadsim_seconds = 0
+    TAU = 0.001  # Target Network HyperParameters
+    LRA = 0.0001  # Learning rate for Actor
+    LRC = 0.001  # Lerning rate for Critic
 
-    EXPLORE = 1000
+    agent = DDPG(state_dim, action_dim, memorySize, discountFactor, learnStart, minibatch_size,TAU,LRA,LRC)
+    agent.initNetworks()
+    agent.loadWeights(weights_path)
 
-    if not continue_execution:
-        episode_count = 10000
-        max_steps = 1000
-        minibatch_size = 64
-        discountFactor = 0.99
-        memorySize = 10000
-        learnStart = 64 # timesteps to observe before training
-        action_dim = 1
-        state_dim = 20
-        INITIAL_EPSILON = 1  # starting value of epsilon
-        FINAL_EPSILON = 0.05  # final value of epsilon
-        explorationRate = INITIAL_EPSILON
-        current_epoch = 0
-        stepCounter = 0
-        loadsim_seconds = 0
-        TAU = 0.001  # Target Network HyperParameters
-        LRA = 0.0001  # Learning rate for Actor
-        LRC = 0.001  # Lerning rate for Critic
-
-        agent = DDPG(state_dim, action_dim, memorySize, discountFactor, learnStart, minibatch_size,TAU,LRA,LRC)
-        agent.initNetworks()
-
-    else:
-        #Load weights, monitor info and parameter info.
-        with open(params_json) as outfile:
-            d = json.load(outfile)
-            episode_count = d.get('epochs')
-            max_steps = d.get('steps')
-            explorationRate = d.get('explorationRate')
-            minibatch_size = d.get('minibatch_size')
-            learnStart = d.get('learnStart')
-            action_dim = d.get('action_dim')
-            state_dim = d.get('state_dim')
-            discountFactor = d.get('discountFactor')
-            memorySize = d.get('memorySize')
-            current_epoch = d.get('current_epoch')
-            INITIAL_EPSILON = d.get('INITIAL_EPSILON')
-            FINAL_EPSILON = d.get('FINAL_EPSILON')
-            stepCounter = d.get('stepCounter')
-            loadsim_seconds = d.get('loadsim_seconds')
-            TAU = d.get('TAU')  # Target Network HyperParameters
-            LRA = d.get('LRA')  # Learning rate for Actor
-            LRC = d.get('LRC')  # Lerning rate for Critic
-
-        agent = DDPG(state_dim, action_dim, memorySize, discountFactor, learnStart, minibatch_size,TAU,LRA,LRC)
-        agent.initNetworks()
-        agent.loadWeights(weights_path)
-
-        clear_monitor_files(outdir)
-        copy_tree(monitor_path, outdir)
-
-    env_o.get_init(action_dim=action_dim, state_dim=state_dim, max_step=max_steps,discrete_action=False)
-    env = gym.wrappers.Monitor(env_o, outdir, force=not continue_execution, resume=continue_execution)
+    env.get_init(action_dim=action_dim, state_dim=state_dim, max_step=max_steps,discrete_action=False)
 
     last100Scores = [0] * 100
     last100ScoresIndex = 0
@@ -279,9 +217,9 @@ if __name__ == '__main__':
         cumulated_reward = 0
 
         for t in range(max_steps):
-            env_o.get_step(t)
+            env.get_step(t)
 
-            action = agent.selectAction(state,explorationRate)
+            action = agent.selectAction(state)
 
             newObservation, reward, done, info = env.step(action)
             newstate = np.array(newObservation)
@@ -290,21 +228,13 @@ if __name__ == '__main__':
             if highest_reward < cumulated_reward:
                 highest_reward = cumulated_reward
 
-            agent.addMemory(state, action, reward, newstate, done)
             state = newstate
 
             stepCounter += 1
 
-            if stepCounter == learnStart:
-                print("Starting learning")
-
-            if stepCounter >= learnStart:
-                agent.learnOnMiniBatch(minibatch_size)
-
             if (t == max_steps-1):
                 print ("reached the end")
                 done = True
-
 
             if done:
                 last100Scores[last100ScoresIndex] = cumulated_reward
@@ -316,28 +246,10 @@ if __name__ == '__main__':
                     last100Filled = True
                     last100ScoresIndex = 0
                 if not last100Filled:
-                    #+"  TotalStep: " + "%4d"%stepCounter
                     print ("EP "+"%3d"%epoch +" -{:>4} steps".format(t+1)+" - CReward: "+"%5d"%cumulated_reward +"  Eps="+"%3.2f"%explorationRate +"  Time: %d:%02d:%02d" % (h, m, s))
                 else:
                     print ("EP " + str(epoch) +" -{:>4} steps".format(t+1) +" - last100 C_Rewards : " + str(int((sum(last100Scores) / len(last100Scores)))) + " - CReward: " + "%5d" % cumulated_reward + "  Eps=" + "%3.2f" % explorationRate + "  Time: %d:%02d:%02d" % (h, m, s))
-                    if (epoch)%100==0:
-                        agent.saveModel(weights_path+str(epoch))
-                        env._flush(force=True)
-                        copy_tree(outdir,monitor_path)
-                        #save simulation parameters.
-                        parameter_keys = ['epochs','steps','explorationRate','minibatch_size','learnStart','discountFactor','memorySize','current_epoch','stepCounter','INITIAL_EPSILON','FINAL_EPSILON','loadsim_seconds','action_dim','state_dim','TAU','LRC','LRA']
-                        parameter_values = [episode_count, max_steps, explorationRate, minibatch_size, learnStart, discountFactor, memorySize, epoch, stepCounter, INITIAL_EPSILON, FINAL_EPSILON, total_seconds, action_dim, state_dim, TAU, LRC, LRA]
-                        parameter_dictionary = dict(zip(parameter_keys, parameter_values))
-                        with open(params_json, 'w') as outfile:
-                            json.dump(parameter_dictionary, outfile)
                 break
-
-        if epoch%10==0:
-            plotter.plot(env,average=10)
-
-        if explorationRate > FINAL_EPSILON and stepCounter > learnStart:
-            explorationRate -= (INITIAL_EPSILON - FINAL_EPSILON) / EXPLORE
-            #explorationRate *= epsilon_discount
 
     env.close()
 

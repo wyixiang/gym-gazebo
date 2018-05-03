@@ -60,26 +60,17 @@ class QLearn:
         self.learnQ(state1, action1, reward, reward + self.gamma*maxqnew)
 
 
-def render():
-    render_skip = 0 #Skip first X episodes.
-    render_interval = 50 #Show render Every Y episodes.
-    render_episodes = 10 #Show Z episodes every rendering.
-
-    if (t % render_interval == 0) and (t != 0) and (t > render_skip):
-        env.render()
-    elif ((t - render_episodes) % render_interval == 0) and (t != 0) and (t > render_skip) and (render_episodes < t):
-        env.close()
-
 if __name__ == '__main__':
 
     env_o = gym.make('GazeboTurtlebotLidar-v0')
 
     outdir = '/tmp/gazebo_gym_experiments'
     epsilon_discount = 0.9986
-    steps = 10000
+    episode_count = 10000
+    max_steps = 1000
     highest_reward = 0
 
-    env_o.get_init(action_dim=3, state_dim=5, max_step=steps)
+    env_o.get_init(action_dim=3, state_dim=5, max_step=max_steps)
     env = gym.wrappers.Monitor(env_o, outdir, force=True)
     plotter = liveplot.LivePlot(outdir)
 
@@ -90,64 +81,53 @@ if __name__ == '__main__':
 
     initial_epsilon = qlearn.epsilon
 
-
-
     start_time = time.time()
 
+    last100Scores = [0] * 100
+    last100ScoresIndex = 0
+    last100Filled = False
 
-    for t in range(steps):
-        env_o.get_step(t)
-        done = False
-
-        cumulated_reward = 0 #Should going forward give more reward then L/R ?
-
+    for epoch in range(1,episode_count+1,1):
         observation = env.reset()
+        state = ''.join(map(str, observation))
+        cumulated_reward = 0
 
         if qlearn.epsilon > 0.05:
             qlearn.epsilon *= epsilon_discount
 
-        #render() #defined above, not env.render()
+        for t in range(max_steps):
+            env_o.get_step(t)
 
-        state = ''.join(map(str, observation))
-
-        for i in range(1500):
-
-            # Pick an action based on the current state
             action = qlearn.chooseAction(state)
 
-            # Execute the action and get feedback
             observation, reward, done, info = env.step(action)
+            nextState = ''.join(map(str, observation))
+
             cumulated_reward += reward
 
             if highest_reward < cumulated_reward:
                 highest_reward = cumulated_reward
 
-            nextState = ''.join(map(str, observation))
-
             qlearn.learn(state, action, reward, nextState)
 
-            env._flush(force=True)
+            state = nextState
 
-            if not(done):
-                state = nextState
-            else:
-                last_time_steps = numpy.append(last_time_steps, [int(i + 1)])
+            if done:
+                last100Scores[last100ScoresIndex] = cumulated_reward
+                last100ScoresIndex += 1
+                total_seconds = int(time.time() - start_time)
+                m, s = divmod(total_seconds, 60)
+                h, m = divmod(m, 60)
+                if last100ScoresIndex >= 100:
+                    last100Filled = True
+                    last100ScoresIndex = 0
+                if not last100Filled:
+                    print ("EP "+"%3d"%epoch +" -{:>4} steps".format(t+1)+" - CReward: "+"%5d"%cumulated_reward +"  Eps="+"%3.2f"%qlearn.epsilon +"  Time: %d:%02d:%02d" % (h, m, s))
+                else:
+                    print ("EP " + str(epoch) +" -{:>4} steps".format(t+1) +" - last100 C_Rewards : " + str(int((sum(last100Scores) / len(last100Scores)))) + " - CReward: " + "%5d" % cumulated_reward + "  Eps=" + "%3.2f" % qlearn.epsilon + "  Time: %d:%02d:%02d" % (h, m, s))
                 break
 
-        if t%100==0:
-            plotter.plot(env,average=20)
-
-        m, s = divmod(int(time.time() - start_time), 60)
-        h, m = divmod(m, 60)
-        print ("EP: " + str(t + 1) + " - [alpha: " + str(round(qlearn.alpha, 2)) + " - gamma: " + str(round(qlearn.gamma, 2)) + " - epsilon: " + str(round(qlearn.epsilon, 2)) + "] - Reward: " + "%5d" % cumulated_reward + "     Time: %d:%02d:%02d" % (h, m, s))
-
-    print ("\n|" + str(steps) + "|" + str(qlearn.alpha) + "|" + str(qlearn.gamma) + "|" + str(initial_epsilon) + "*" + str(epsilon_discount) + "|" + str(highest_reward) + "| PICTURE |")
-
-    l = last_time_steps.tolist()
-    l.sort()
-
-    #print("Parameters: a="+str)
-    print("Overall score: {:0.2f}".format(last_time_steps.mean()))
-    print("Best 100 score: {:0.2f}".format(reduce(lambda x, y: x + y, l[-100:]) / len(l[-100:])))
+        if t%20==0:
+            plotter.plot(env,average=10)
 
     env.close()

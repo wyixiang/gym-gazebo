@@ -229,9 +229,9 @@ if __name__ == '__main__':
 
     continue_execution = False
 
-    weights_path = './tmp/turtle_kinect_dqn100'
+    weights_path = './tmp/kinect/turtle_kinect_dqn'
     monitor_path ='./tmp/turtle_kinect_dqn'
-    params_json  = './tmp/turtle_kinect_dqn.json'
+    params_json  = './tmp/kinect/turtle_kinect_dqn.json'
     plotter = liveplot.LivePlot(outdir)
 
     epsilon_discount = 0.998
@@ -248,7 +248,7 @@ if __name__ == '__main__':
         network_inputs = 20
         network_outputs = 21
         network_layers = [300, 300]
-        INITIAL_EPSILON = 0.6  # starting value of epsilon
+        INITIAL_EPSILON = 0.3  # starting value of epsilon
         FINAL_EPSILON = 0.05  # final value of epsilon
         explorationRate = INITIAL_EPSILON
         current_epoch = 0
@@ -257,7 +257,7 @@ if __name__ == '__main__':
 
         agent = DeepQ(network_inputs, network_outputs, memorySize, discountFactor, learningRate, learnStart)
         agent.initNetworks(network_layers)
-        agent.loadWeights(weights_path)
+        agent.loadWeights('./tmp/kbak/turtle_kinect_dqn1001400')
     else:
         #Load weights, monitor info and parameter info.
         with open(params_json) as outfile:
@@ -337,7 +337,6 @@ if __name__ == '__main__':
                 print ("reached the end")
                 done = True
 
-            env._flush(force=True)
             if done:
                 last100Scores[last100ScoresIndex] = cumulated_reward
                 last100ScoresIndex += 1
@@ -351,10 +350,10 @@ if __name__ == '__main__':
                     print ("EP "+"%3d"%epoch +" -{:>4} steps".format(t+1)+" - CReward: "+"%5d"%cumulated_reward +"  Eps="+"%3.2f"%explorationRate +"  Time: %d:%02d:%02d" % (h, m, s))
                 else:
                     print ("EP " + str(epoch) +" -{:>4} steps".format(t+1) +" - last100 C_Rewards : " + str(int((sum(last100Scores) / len(last100Scores)))) + " - CReward: " + "%5d" % cumulated_reward + "  Eps=" + "%3.2f" % explorationRate + "  Time: %d:%02d:%02d" % (h, m, s))
-                    if (epoch)%100==0:
+                    if (epoch)%50==0:
                         agent.saveModel(weights_path+str(epoch))
-                        env._flush()
-                        copy_tree(outdir,monitor_path)
+                        #env._flush(force=True)
+                        #copy_tree(outdir,monitor_path)
                         #save simulation parameters.
                         parameter_keys = ['epochs','steps','updateTargetNetwork','explorationRate','minibatch_size','learnStart','learningRate','discountFactor','memorySize','network_inputs','network_outputs','network_structure','current_epoch','stepCounter','INITIAL_EPSILON','FINAL_EPSILON','loadsim_seconds']
                         parameter_values = [episode_count, max_steps, updateTargetNetwork, explorationRate, minibatch_size, learnStart, learningRate, discountFactor, memorySize, network_inputs, network_outputs, network_layers, epoch, stepCounter, INITIAL_EPSILON, FINAL_EPSILON, total_seconds]

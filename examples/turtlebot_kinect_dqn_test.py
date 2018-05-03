@@ -103,7 +103,7 @@ if __name__ == '__main__':
     env = gym.make('GazeboTurtlebotKinect-v0')
     outdir = '/tmp/gazebo_gym_experiments/'
 
-    weights_path = './tmp/turtle_kinect_dqn1001400'
+    weights_path = './tmp/kinect/turtle_kinect_dqn1001400'
 
     episode_count = 10000
     max_steps = 1000

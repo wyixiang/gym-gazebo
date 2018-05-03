@@ -133,11 +133,12 @@ class DeepQ:
             return reward + self.discountFactor * self.getMaxQ(qValuesNewState)
 
     # select the action with the highest Q value
-    def selectAction(self, qValues, explorationRate):
+    def selectAction(self, state, explorationRate):
         rand = random.random()
         if rand < explorationRate :
             action = np.random.randint(0, self.output_size)
         else :
+            qValues = agent.getQValues(state)
             action = self.getMaxIndex(qValues)
         return action
 
@@ -298,6 +299,7 @@ if __name__ == '__main__':
     #start iterating from 'current epoch'.
     for epoch in range(current_epoch+1, episode_count + 1, 1):
         observation = env.reset()
+        state = np.asarray(observation)
         cumulated_reward = 0
 
         # number of timesteps
@@ -306,16 +308,17 @@ if __name__ == '__main__':
 
             qValues = agent.getQValues(np.asarray(observation))
 
-            action = agent.selectAction(qValues, explorationRate)
+            action = agent.selectAction(state, explorationRate)
 
             newObservation, reward, done, info = env.step(action)
+            newstate = np.asarray(newObservation)
 
             cumulated_reward += reward
             if highest_reward < cumulated_reward:
                 highest_reward = cumulated_reward
 
-            agent.addMemory(np.asarray(observation), action, reward, np.asarray(newObservation), done)
-            observation = newObservation
+            agent.addMemory(state, action, reward, newstate, done)
+            state = newstate
 
             stepCounter += 1
 
@@ -335,7 +338,6 @@ if __name__ == '__main__':
                 print ("reached the end")
                 done = True
 
-            env._flush(force=True)
             if done:
                 last100Scores[last100ScoresIndex] = cumulated_reward
                 last100ScoresIndex += 1
@@ -351,7 +353,7 @@ if __name__ == '__main__':
                     print ("EP " + str(epoch) +" -{:>4} steps".format(t+1) +" - last100 C_Rewards : " + str(int((sum(last100Scores) / len(last100Scores)))) + " - CReward: " + "%5d" % cumulated_reward + "  Eps=" + "%3.2f" % explorationRate + "  Time: %d:%02d:%02d" % (h, m, s))
                     if (epoch)%100==0:
                         agent.saveModel(weights_path)
-                        env._flush()
+                        env._flush(force=True)
                         copy_tree(outdir,monitor_path)
                         #save simulation parameters.
                         parameter_keys = ['epochs','steps','updateTargetNetwork','explorationRate','minibatch_size','learnStart','learningRate','discountFactor','memorySize','network_inputs','network_outputs','network_structure','current_epoch','stepCounter','INITIAL_EPSILON','FINAL_EPSILON','loadsim_seconds']

@@ -129,12 +129,12 @@ class DeepQ:
             return reward + self.discountFactor * self.getMaxQ(qValuesNewState)
 
     # select the action with the highest Q value
-    def selectAction(self, observation, explorationRate):
+    def selectAction(self, state, explorationRate):
         rand = random.random()
         if rand < explorationRate :
             action = np.random.randint(0, self.output_size)
         else :
-            qValues = agent.getQValues(observation)
+            qValues = agent.getQValues(state)
             action = self.getMaxIndex(qValues)
         return action
 
@@ -229,9 +229,9 @@ if __name__ == '__main__':
 
     continue_execution = False
 
-    weights_path = './tmp/cnn-w/turtle_camera'
-    monitor_path = './tmp/turtle_camera'
-    params_json = './tmp/turtle_camera.json'
+    weights_path = './tmp/cnn2/turtle_camera'
+    monitor_path = './tmp/turtle_camera2'
+    params_json = './tmp/cnn2/turtle_camera.json'
     plotter = liveplot.LivePlot(outdir)
 
     img_rows, img_cols, img_channels = env_o.img_rows, env_o.img_cols, env_o.img_channels
@@ -258,7 +258,7 @@ if __name__ == '__main__':
 
         agent = DeepQ(network_outputs, memorySize, discountFactor, learningRate, learnStart)
         agent.initNetworks()
-        agent.loadWeights('./tmp/cbak/turtle_camera')
+        #agent.loadWeights('./tmp/cbak/turtle_camera2500')
 
     else:
         #Load weights, monitor info and parameter info.
@@ -355,7 +355,7 @@ if __name__ == '__main__':
                     print ("EP " + str(epoch) +" -{:>4} steps".format(t+1) +" - last100 C_Rewards : " + str(int((sum(last100Scores) / len(last100Scores)))) + " - CReward: " + "%5d" % cumulated_reward + "  Eps=" + "%3.2f" % explorationRate + "  Time: %d:%02d:%02d" % (h, m, s))
                     if (epoch)%100==0:
                         agent.saveModel(weights_path+str(epoch))
-                        env._flush()
+                        env._flush(force=True)
                         copy_tree(outdir,monitor_path)
                         #save simulation parameters.
                         parameter_keys = ['epochs','steps','updateTargetNetwork','explorationRate','minibatch_size','learnStart','learningRate','discountFactor','memorySize','network_outputs','current_epoch','stepCounter','EXPLORE','INITIAL_EPSILON','FINAL_EPSILON','loadsim_seconds']

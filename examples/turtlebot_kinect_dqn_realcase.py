@@ -163,11 +163,11 @@ class GoForward():
             vel_cmd = Twist()
             vel_cmd.linear.x = 0.2
             vel_cmd.angular.z = ang_vel
-            print ("NUM" + "%3d" % num +"Action " + "%2d" % action + " linear " + "%.1f" % vel_cmd.linear.x + " angular " + "%2.1f" % vel_cmd.angular.z )
+            print ("NUM" + "%3d" % num +" Action " + "%2d" % action + " linear " + "%.1f" % vel_cmd.linear.x + " angular " + "%3.1f" % vel_cmd.angular.z )
 
             self.vel_pub.publish(vel_cmd)
 
-            time.sleep(1)
+            time.sleep(0.4)
 
     def shutdown(self):
         # stop turtlebot

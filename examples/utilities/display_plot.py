@@ -2,6 +2,7 @@
 
 import os
 import gym
+import gym_gazebo
 import matplotlib
 import matplotlib.pyplot as plt
 import itertools
@@ -84,20 +85,12 @@ def pause():
 
 if __name__ == '__main__':
 
-    outdir = '/tmp/gazebo_gym_experiments'
+    outdir = '../tmp/turtle_kinect_dqn'
     plotter = LivePlot(outdir)
+    env_o = gym.make('GazeboTurtlebotKinect-v0')
+    env = gym.wrappers.Monitor(env_o,outdir,force=False, resume=True)
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-f", "--full", action='store_true', help="print the full data plot with lines")
-    parser.add_argument("-d", "--dots", action='store_true', help="print the full data plot with dots")
-    parser.add_argument("-a", "--average", type=int, nargs='?', const=50, metavar="N", help="plot an averaged graph using N as average size delimiter. Default = 50")
-    parser.add_argument("-i", "--interpolated", type=int, nargs='?', const=50, metavar="M", help="plot an interpolated graph using M as interpolation amount. Default = 50")
-    args = parser.parse_args()
-
-    if len(sys.argv)==1:
-        # When no arguments given, plot full data graph
-        plotter.plot(full=True)
-    else:
-        plotter.plot(full=args.full, dots=args.dots, average=args.average, interpolated=args.interpolated)
+    plotter.plot(env,full=True)
+    #plotter.plot(env,full=args.full, dots=args.dots, average=args.average, interpolated=args.interpolated)
 
     pause()

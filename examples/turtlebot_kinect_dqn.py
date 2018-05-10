@@ -133,11 +133,12 @@ class DeepQ:
             return reward + self.discountFactor * self.getMaxQ(qValuesNewState)
 
     # select the action with the highest Q value
-    def selectAction(self, qValues, explorationRate):
+    def selectAction(self, state, explorationRate):
         rand = random.random()
         if rand < explorationRate :
             action = np.random.randint(0, self.output_size)
         else :
+            qValues = agent.getQValues(state)
             action = self.getMaxIndex(qValues)
         return action
 
@@ -229,9 +230,9 @@ if __name__ == '__main__':
 
     continue_execution = False
 
-    weights_path = './tmp/kinect/turtle_kinect_dqn'
+    weights_path = './tmp/kinect_re/turtle_kinect_dqn'
     monitor_path ='./tmp/turtle_kinect_dqn'
-    params_json  = './tmp/kinect/turtle_kinect_dqn.json'
+    params_json  = './tmp/kinect_re/turtle_kinect_dqn.json'
     plotter = liveplot.LivePlot(outdir)
 
     epsilon_discount = 0.998
@@ -248,7 +249,7 @@ if __name__ == '__main__':
         network_inputs = 20
         network_outputs = 21
         network_layers = [300, 300]
-        INITIAL_EPSILON = 0.3  # starting value of epsilon
+        INITIAL_EPSILON = 1  # starting value of epsilon
         FINAL_EPSILON = 0.05  # final value of epsilon
         explorationRate = INITIAL_EPSILON
         current_epoch = 0
@@ -257,7 +258,7 @@ if __name__ == '__main__':
 
         agent = DeepQ(network_inputs, network_outputs, memorySize, discountFactor, learningRate, learnStart)
         agent.initNetworks(network_layers)
-        agent.loadWeights('./tmp/kbak/turtle_kinect_dqn1001400')
+        #agent.loadWeights('./tmp/kbak/turtle_kinect_dqn1001400')
     else:
         #Load weights, monitor info and parameter info.
         with open(params_json) as outfile:
@@ -300,24 +301,24 @@ if __name__ == '__main__':
     #start iterating from 'current epoch'.
     for epoch in range(current_epoch+1, episode_count + 1, 1):
         observation = env.reset()
+        state = np.asarray(observation)
         cumulated_reward = 0
 
         # number of timesteps
         for t in range(max_steps):
             env_o.get_step(t)
 
-            qValues = agent.getQValues(np.asarray(observation))
-
-            action = agent.selectAction(qValues, explorationRate)
+            action = agent.selectAction(state, explorationRate)
 
             newObservation, reward, done, info = env.step(action)
+            newstate = np.asarray(newObservation)
 
             cumulated_reward += reward
             if highest_reward < cumulated_reward:
                 highest_reward = cumulated_reward
 
-            agent.addMemory(np.asarray(observation), action, reward, np.asarray(newObservation), done)
-            observation = newObservation
+            agent.addMemory(state, action, reward, newstate, done)
+            state = newstate
 
             stepCounter += 1
 
@@ -352,8 +353,8 @@ if __name__ == '__main__':
                     print ("EP " + str(epoch) +" -{:>4} steps".format(t+1) +" - last100 C_Rewards : " + str(int((sum(last100Scores) / len(last100Scores)))) + " - CReward: " + "%5d" % cumulated_reward + "  Eps=" + "%3.2f" % explorationRate + "  Time: %d:%02d:%02d" % (h, m, s))
                     if (epoch)%50==0:
                         agent.saveModel(weights_path+str(epoch))
-                        #env._flush(force=True)
-                        #copy_tree(outdir,monitor_path)
+                        env._flush(force=True)
+                        copy_tree(outdir,monitor_path)
                         #save simulation parameters.
                         parameter_keys = ['epochs','steps','updateTargetNetwork','explorationRate','minibatch_size','learnStart','learningRate','discountFactor','memorySize','network_inputs','network_outputs','network_structure','current_epoch','stepCounter','INITIAL_EPSILON','FINAL_EPSILON','loadsim_seconds']
                         parameter_values = [episode_count, max_steps, updateTargetNetwork, explorationRate, minibatch_size, learnStart, learningRate, discountFactor, memorySize, network_inputs, network_outputs, network_layers, epoch, stepCounter, INITIAL_EPSILON, FINAL_EPSILON, total_seconds]

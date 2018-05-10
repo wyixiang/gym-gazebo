@@ -103,7 +103,7 @@ if __name__ == '__main__':
     env = gym.make('GazeboTurtlebotKinect-v0')
     outdir = '/tmp/gazebo_gym_experiments/'
 
-    weights_path = './tmp/kinect/turtle_kinect_dqn1001400'
+    weights_path = './tmp/kbak/turtle_kinect_dqn100'
 
     episode_count = 10000
     max_steps = 1000
@@ -116,21 +116,36 @@ if __name__ == '__main__':
 
     agent = DeepQ(network_inputs, network_outputs, learningRate)
     agent.initNetworks(network_layers)
-    agent.loadWeights(weights_path)
+    #agent.loadWeights(weights_path)
 
     env.get_init(action_dim=network_outputs, state_dim=network_inputs, max_step=max_steps)
 
-    last100Scores = [0] * 100
-    last100ScoresIndex = 0
-    last100Filled = False
+    last10Scores = [0] * 10
+    last10ScoresIndex = 0
+    last10Filled = False
     highest_reward = 0
+    time_to_end = 0
     start_time = time.time()
+
+    num = 100
+    agent.loadWeights(weights_path + str(num))
+    # 100 250
 
     #start iterating from 'current epoch'.
     for epoch in range(1, episode_count + 1, 1):
         observation = env.reset()
         state = np.asarray(observation)
         cumulated_reward = 0
+        if last10Filled:
+            print ("NUM " + str(num) + " last10 C_Rewards : " + str(int((sum(last10Scores) / len(last10Scores)))) + " highest_reward : " + str(highest_reward) + " time_to_end : " +str(time_to_end))
+            last10Scores = [0] * 10
+            last10ScoresIndex = 0
+            last10Filled = False
+            highest_reward = 0
+            time_to_end = 0
+            num += 100
+            print("str=" + str(num))
+            agent.loadWeights(weights_path + str(num))
 
         for t in range(max_steps):
             env.get_step(t)
@@ -141,8 +156,7 @@ if __name__ == '__main__':
             newstate = np.asarray(newObservation)
 
             cumulated_reward += reward
-            if highest_reward < cumulated_reward:
-                highest_reward = cumulated_reward
+
 
             state = newstate
 
@@ -151,20 +165,20 @@ if __name__ == '__main__':
             if (t == max_steps-1):
                 print ("reached the end")
                 done = True
+                time_to_end += 1
 
             if done:
-                last100Scores[last100ScoresIndex] = cumulated_reward
-                last100ScoresIndex += 1
+                if highest_reward < cumulated_reward:
+                    highest_reward = cumulated_reward
+                last10Scores[last10ScoresIndex] = cumulated_reward
+                last10ScoresIndex += 1
                 total_seconds = int(time.time() - start_time + loadsim_seconds)
                 m, s = divmod(total_seconds, 60)
                 h, m = divmod(m, 60)
-                if last100ScoresIndex >= 10:
-                    last100Filled = True
-                    last100ScoresIndex = 0
-                if not last100Filled:
-                    print ("EP "+"%3d"%epoch +" -{:>4} steps".format(t+1)+" - CReward: "+"%5d"%cumulated_reward +"  Time: %d:%02d:%02d" % (h, m, s))
-                else:
-                    print ("EP " + str(epoch) +" -{:>4} steps".format(t+1) +" - last100 C_Rewards : " + str(int((sum(last100Scores) / len(last100Scores)))) + " - CReward: " + "%5d" % cumulated_reward + "  Eps=" + "  Time: %d:%02d:%02d" % (h, m, s))
+                if last10ScoresIndex >= 10:
+                    last10Filled = True
+                    last10ScoresIndex = 0
+                print ("EP "+"%3d"%epoch +" -{:>4} steps".format(t+1)+" - CReward: "+"%5d"%cumulated_reward +"  Time: %d:%02d:%02d" % (h, m, s))
                 break
 
     env.close()

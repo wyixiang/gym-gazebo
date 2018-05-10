@@ -86,14 +86,13 @@ class DeepQ:
 
     def loadWeights(self, path):
         self.model.set_weights(load_model(path+'.h5').get_weights())
-        print("success load")
 
 if __name__ == '__main__':
 
     env = gym.make('GazeboTurtlebotCameraEnv-v0')
     outdir = '/tmp/gazebo_gym_experiments/'
 
-    weights_path = './tmp/cnn/turtle_camera500'
+    weights_path = './tmp/cnn2/turtle_camera'
     #cnn2 1500 2400 2200!!!
 
     img_rows, img_cols, img_channels = env.img_rows, env.img_cols, env.img_channels
@@ -107,7 +106,7 @@ if __name__ == '__main__':
 
     agent = DeepQ(network_outputs, learningRate)
     agent.initNetworks()
-    agent.loadWeights(weights_path)
+    #agent.loadWeights(weights_path)
 
     env.get_init(action_dim=network_outputs, max_step=max_steps)
 
@@ -115,13 +114,27 @@ if __name__ == '__main__':
     last10ScoresIndex = 0
     last10Filled = False
     highest_reward = 0
+    time_to_end = 0
     start_time = time.time()
+
+    num = 100
+    agent.loadWeights(weights_path + str(num))
 
     #start iterating from 'current epoch'.
     for epoch in range(1, episode_count + 1, 1):
         observation = env.reset()
         state = observation
         cumulated_reward = 0
+        if last10Filled:
+            print ("NUM " + str(num) + " last10 C_Rewards : " + str(int((sum(last10Scores) / len(last10Scores)))) + " highest_reward : " + str(highest_reward) + " time_to_end : " +str(time_to_end))
+            last10Scores = [0] * 10
+            last10ScoresIndex = 0
+            last10Filled = False
+            highest_reward = 0
+            time_to_end = 0
+            num += 100
+            print("str=" + str(num))
+            agent.loadWeights(weights_path + str(num))
 
         for t in range(max_steps):
             env.get_step(t)
@@ -133,8 +146,7 @@ if __name__ == '__main__':
 
             cumulated_reward += reward
             #print(reward,cumulated_reward)
-            if highest_reward < cumulated_reward:
-                highest_reward = cumulated_reward
+
 
             state = newstate
 
@@ -143,8 +155,11 @@ if __name__ == '__main__':
             if (t == max_steps-1):
                 print ("reached the end")
                 done = True
+                time_to_end += 1
 
             if done:
+                if highest_reward < cumulated_reward:
+                    highest_reward = cumulated_reward
                 last10Scores[last10ScoresIndex] = cumulated_reward
                 last10ScoresIndex += 1
                 total_seconds = int(time.time() - start_time + loadsim_seconds)
@@ -153,10 +168,7 @@ if __name__ == '__main__':
                 if last10ScoresIndex >= 10:
                     last10Filled = True
                     last10ScoresIndex = 0
-                if not last10Filled:
-                    print ("EP "+"%3d"%epoch +" -{:>4} steps".format(t+1)+" - CReward: "+"%5d"%cumulated_reward +"  Time: %d:%02d:%02d" % (h, m, s))
-                else:
-                    print ("EP " + str(epoch) +" -{:>4} steps".format(t+1) +" - last100 C_Rewards : " + str(int((sum(last10Scores) / len(last10Scores)))) + " - CReward: " + "%5d" % cumulated_reward + "  Eps=" + "  Time: %d:%02d:%02d" % (h, m, s))
+                print ("EP "+"%3d"%epoch +" -{:>4} steps".format(t+1)+" - CReward: "+"%5d"%cumulated_reward +"  Time: %d:%02d:%02d" % (h, m, s))
                 break
 
     env.close()

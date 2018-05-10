@@ -222,6 +222,7 @@ def clear_monitor_files(training_dir):
         print(file)
         os.unlink(file)
 
+
 if __name__ == '__main__':
 
     env_o = gym.make('GazeboTurtlebotLidar-v0')
@@ -229,7 +230,7 @@ if __name__ == '__main__':
 
     continue_execution = False
 
-    weights_path = './tmp/turtle_lidar_dqn.h5'
+    weights_path = './tmp/turtle_lidar_dqn'
     monitor_path ='./tmp/turtle_lidar_dqn'
     params_json  = './tmp/turtle_lidar_dqn.json'
     plotter = liveplot.LivePlot(outdir)
@@ -305,8 +306,6 @@ if __name__ == '__main__':
         # number of timesteps
         for t in range(max_steps):
             env_o.get_step(t)
-
-            qValues = agent.getQValues(np.asarray(observation))
 
             action = agent.selectAction(state, explorationRate)
 

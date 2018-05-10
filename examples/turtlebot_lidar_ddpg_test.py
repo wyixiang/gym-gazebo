@@ -58,6 +58,7 @@ class ActorNetwork(object):
         V = Dense(action_dim, activation='tanh', kernel_initializer= initializers.RandomNormal(
             mean=0.0, stddev=0.9, seed=None))(h1)
         model = Model(input=S,output=V)
+        #plot_model(model, to_file='model-lidar-ddpg-actor.png')
         return model, model.trainable_weights, S
 
 
@@ -102,6 +103,7 @@ class CriticNetwork(object):
         model = Model(input=[S, A], output=V)
         adam = Adam(lr=self.LEARNING_RATE)
         model.compile(loss='mse', optimizer=adam)
+        #plot_model(model, to_file='model-lidar-ddpg-critic.png')
         return model, A, S
 
 

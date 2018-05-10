@@ -103,7 +103,7 @@ if __name__ == '__main__':
     env = gym.make('GazeboTurtlebotKinect-v0')
     outdir = '/tmp/gazebo_gym_experiments/'
 
-    weights_path = './tmp/kbak/turtle_kinect_dqn100'
+    weights_path = './tmp/kbak/turtle_kinect_dqn1001400'
 
     episode_count = 10000
     max_steps = 1000
@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
     agent = DeepQ(network_inputs, network_outputs, learningRate)
     agent.initNetworks(network_layers)
-    #agent.loadWeights(weights_path)
+    agent.loadWeights(weights_path)
 
     env.get_init(action_dim=network_outputs, state_dim=network_inputs, max_step=max_steps)
 
@@ -127,8 +127,8 @@ if __name__ == '__main__':
     time_to_end = 0
     start_time = time.time()
 
-    num = 100
-    agent.loadWeights(weights_path + str(num))
+    #num = 100
+    #agent.loadWeights(weights_path + str(num))
     # 100 250
 
     #start iterating from 'current epoch'.
@@ -136,6 +136,7 @@ if __name__ == '__main__':
         observation = env.reset()
         state = np.asarray(observation)
         cumulated_reward = 0
+        '''
         if last10Filled:
             print ("NUM " + str(num) + " last10 C_Rewards : " + str(int((sum(last10Scores) / len(last10Scores)))) + " highest_reward : " + str(highest_reward) + " time_to_end : " +str(time_to_end))
             last10Scores = [0] * 10
@@ -146,6 +147,7 @@ if __name__ == '__main__':
             num += 100
             print("str=" + str(num))
             agent.loadWeights(weights_path + str(num))
+        '''
 
         for t in range(max_steps):
             env.get_step(t)

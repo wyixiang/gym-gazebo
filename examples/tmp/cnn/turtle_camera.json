@@ -1,0 +1,1 @@
+{"current_epoch": 1400, "FINAL_EPSILON": 0.1, "INITIAL_EPSILON": 0.4, "network_outputs": 21, "loadsim_seconds": 65676, "memorySize": 10000, "EXPLORE": 1500, "stepCounter": 241795, "epochs": 10000, "discountFactor": 0.99, "steps": 1000, "learnStart": 500, "learningRate": 0.00025, "explorationRate": 0.0999600978403416, "updateTargetNetwork": 10000, "minibatch_size": 64}

@@ -92,7 +92,7 @@ if __name__ == '__main__':
     env = gym.make('GazeboTurtlebotCameraEnv-v0')
     outdir = '/tmp/gazebo_gym_experiments/'
 
-    weights_path = './tmp/cnn2/turtle_camera'
+    weights_path = './tmp/cnn/turtle_camera200'
     #cnn2 1500 2400 2200!!!
 
     img_rows, img_cols, img_channels = env.img_rows, env.img_cols, env.img_channels
@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
     agent = DeepQ(network_outputs, learningRate)
     agent.initNetworks()
-    #agent.loadWeights(weights_path)
+    agent.loadWeights(weights_path)
 
     env.get_init(action_dim=network_outputs, max_step=max_steps)
 
@@ -117,14 +117,15 @@ if __name__ == '__main__':
     time_to_end = 0
     start_time = time.time()
 
-    num = 100
-    agent.loadWeights(weights_path + str(num))
+    #num = 100
+    #agent.loadWeights(weights_path + str(num))
 
     #start iterating from 'current epoch'.
     for epoch in range(1, episode_count + 1, 1):
         observation = env.reset()
         state = observation
         cumulated_reward = 0
+        '''
         if last10Filled:
             print ("NUM " + str(num) + " last10 C_Rewards : " + str(int((sum(last10Scores) / len(last10Scores)))) + " highest_reward : " + str(highest_reward) + " time_to_end : " +str(time_to_end))
             last10Scores = [0] * 10
@@ -135,6 +136,7 @@ if __name__ == '__main__':
             num += 100
             print("str=" + str(num))
             agent.loadWeights(weights_path + str(num))
+        '''
 
         for t in range(max_steps):
             env.get_step(t)

@@ -46,3 +46,10 @@ mav.tlog.raw
 mav.parm
 terrain/
 Theano/
+examples/tmp/log*
+
+gym_gazebo/envs/assets/launch/无标题文档
+
+gym_gazebo/envs/assets/launch/test\.launch
+
+examples/tmp/turtle_kinect_dqn/

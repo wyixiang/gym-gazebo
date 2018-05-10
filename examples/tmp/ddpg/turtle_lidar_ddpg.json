@@ -1,0 +1,1 @@
+{"current_epoch": 1100, "state_dim": 20, "FINAL_EPSILON": 0.05, "INITIAL_EPSILON": 1, "LRA": 0.0001, "TAU": 0.001, "loadsim_seconds": 7592, "memorySize": 10000, "LRC": 0.001, "epochs": 10000, "discountFactor": 0.99, "steps": 1000, "learnStart": 64, "explorationRate": 0.0499999999999937, "action_dim": 1, "stepCounter": 228291, "minibatch_size": 64}

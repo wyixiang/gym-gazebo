@@ -1,0 +1,108 @@
+1
+CMake Error:Workspace contains non-catkin packages in it 
+
+form  https://github.com/erlerobot/gym-gazebo/issues/97
+These are the correct branches for the ecl* packages:
+release/0.61-indigo-kinetic https://github.com/stonier/ecl_core
+release/0.61-indigo-kinetic https://github.com/stonier/ecl_lite
+release/0.60-indigo-kinetic https://github.com/stonier/ecl_navigation
+release/0.61-indigo-kinetic https://github.com/stonier/ecl_tools
+
+from  https://github.com/erlerobot/gym-gazebo/issues/110
+you change file gazebo.repos here:
+ecl_lite: type: git url: https://github.com/stonier/ecl_lite version: release/0.61-indigo-kinetic ecl_navigation: type: git url: https://github.com/stonier/ecl_navigation version: devel ecl_tools: type: git url: https://github.com/stonier/ecl_tools version: release/0.61-indigo-kinetic (change version of ecl_lite and ecl_tools to release/0.61-indigo-kinetic
+then rerun setup.
+
+2
+CMake Error at /opt/ros/kinetic/share/catkin/cmake/catkinConfig.cmake:83 (find_package):
+Could not find a package configuration file provided by
+"ar_track_alvar_msgs" with any of the following names:
+
+ar_track_alvar_msgsConfig.cmake
+ar_track_alvar_msgs-config.cmake
+
+from  https://github.com/erlerobot/gym-gazebo/issues/36
+sudo apt-get install ros-kinetic-ar-track-alvar-msgs
+
+3
+gazebo/gym_gazebo/envs/installation/catkin_ws/src/joystick_drivers/spacenav_node/src/spacenav_node.cpp:38:19: fatal error: spnav.h: No such file or directory
+
+from https://github.com/erlerobot/gym-gazebo/issues/38
+sudo apt-get install libspnav-dev
+
+4
+fatal error: bluetooth/bluetooth.h: No such file or directory
+
+from  https://stackoverflow.com/questions/23436909/where-is-the-bluetooth-bluetooth-h-located-in-linux
+sudo apt-get install libbluetooth-dev
+
+5
+fatal error: cwiid.h: 没有那个文件或目录
+
+from https://github.com/erlerobot/gym-gazebo/issues/33
+sudo apt-get install libcwiid-dev
+
+6
+/bin/sh: 1: pyrcc4: not found
+
+from  https://stackoverflow.com/questions/2941977/how-can-i-find-a-gitk-type-of-tool-for-hg
+If you type pyrcc4 at the command prompt, you get a helpful message suggesting a package to install to get it. 
+sudo apt install pyqt4-dev-tools
+
+######################################################
+7
+gym
+fatal error: ffi.h
+sudo apt-get install libffi-dev
+
+##########################################################
+
+8
+ImportError: /opt/ros/kinetic/lib/python2.7/dist-packages/cv2.so: undefined symbol: PyCObject_Type
+
+from  https://github.com/erlerobot/gym-gazebo/issues/37
+from  https://github.com/erlerobot/gym-gazebo/issues/100
+
+remove cv2.so
+cd /opt/ros/kinetic/lib/python2.7/dist-packages/
+sudo nautilus .
+
+do it using GUI
+remove or rename and check
+
+pip3 install opencv-python
+
+9
+KeyError: 'ROS_PORT_SIM'
+
+from  https://github.com/erlerobot/gym-gazebo/issues/59
+export ROS_PORT_SIM=11311
+
+10
+while processing /home/yixiangw/gym-gazebo/gym_gazebo/envs/installation/catkin_ws/src/turtlebot_simulator/turtlebot_gazebo/launch/includes/kobuki.launch.xml:
+Invalid <param> tag: Cannot load command parameter [robot_description]: command [/opt/ros/kinetic/lib/xacro/xacro --inorder '/home/yixiangw/gym-gazebo/gym_gazebo/envs/installation/catkin_ws/src/turtlebot/turtlebot_description/robots/kobuki_hexagons_asus_xtion_pro.urdf.xacro'] returned with code [2]. 
+
+Param xml is <param command="$(arg urdf_file)" name="robot_description"/>
+The traceback for the exception was written to the log file
+
+from  https://github.com/erlerobot/gym-gazebo/issues/58
+vim ~/gym-gazebo/gym_gazebo/envs/installation/catkin_ws/src/turtlebot_simulator/turtlebot_gazebo/launch/includes/kobuki.launch.xml
+replace line6 to
+<arg name="urdf_file" default="$(find xacro)/xacro.py '$(find turtlebot_description)/robots/$(arg base)_$(arg stacks)_$(arg 3d_sensor).urdf.xacro'"/>
+then the problem might be solved
+
+11
+gzclient dose not work during the simulation
+
+from  https://github.com/erlerobot/gym-gazebo/issues/41
+gzclient should show you the robot
+
+
+
+
+addition
+from  https://github.com/erlerobot/gym-gazebo/issues/48
+sudo apt-get install python-qt4 
+
+from  https://github.com/erlerobot/gym-gazebo/issues/89
+pip install rospkg catkin_pkg
